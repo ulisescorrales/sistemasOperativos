@@ -31,8 +31,10 @@ const	struct	cmdent	cmdtab[] = {
     {"miPrograma",FALSE, miPrograma},    
     {"punto6",FALSE,punto6},
     {"tp2punto1",FALSE,tp2punto1},
-    {"tp2Punto2",FALSE,tp2Punto2},
-    {"mut",FALSE,mut}
+    {"tp2Punto2",FALSE,tp2Punto2},   
+    {"killSleep",FALSE,killSleep},
+    {"gestor_bisiestos",FALSE,gestor_bisiestos},
+	{"galaga",FALSE,	galaga}
     
 };
 

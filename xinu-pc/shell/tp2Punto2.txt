@@ -1,1 +1,0 @@
-Los valores imprimidos prácticamente son 0 y 2000, no se imprimen valores intermedios. 
