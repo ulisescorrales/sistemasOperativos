@@ -37,10 +37,10 @@ typedef unsigned short u16;
 #define BUTTON_EXIT 0x10 //Presionar 'q' para salir
 #define BUTTON_SELECT	0x03
 #define BUTTON_START	0x2c
-#define BUTTON_RIGHT	0x1f
+#define BUTTON_RIGHT	0x20 //'d'
 #define BUTTON_LEFT	0x1e	
-#define BUTTON_UP	'w'
-#define BUTTON_DOWN 	's'	
+#define BUTTON_UP	0x11 //'w'
+#define BUTTON_DOWN 	0x1f //'s'
 #define BUTTON_R	'1'
 #define BUTTON_L	'2'
 #define KEY_DOWN_NOW(key)  (tecla_actual == key)
@@ -64,6 +64,7 @@ void initialize();
 void drawEnemies();
 void endGame();
 int collision(u16 enemyX, u16 enemyY, u16 enemyWidth, u16 enemyHeight, u16 playerX, u16 playerY);
+int collisionShoot(u16 enemyX, u16 enemyY, u16 enemyWidth, u16 enemyHeight, u16 playerX, u16 playerY);
 
 //objects
 struct Players {
@@ -83,14 +84,19 @@ int shoots[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 int curr_shot = 0;
 //Máximo hay 10 balas
 #define N_SHOOTS 10
-
+/*void ubicarAlPrincipio(struct Enemy enemies[9]){
+	for (int a = 0; a < 9; a++) {
+		enemies[a].enemyX = (28*a);
+		enemies[a].enemyY = 0;
+	}
+}*/
 int juego(pid32 pid_main,pid32 pid_vidas_puntaje) {
 	//easy enemy wave set setup
 	struct Enemy easyEnemies[9];
 	for (int a = 0; a < 9; a++) {
 		easyEnemies[a].enemyX = (28*a);
 		easyEnemies[a].enemyY = 0;
-	} 
+	}
 	easyEnemies[1].enemyX = 240;
 	easyEnemies[4].enemyX = 240;
 	easyEnemies[8].enemyX = 240;
@@ -107,14 +113,14 @@ int juego(pid32 pid_main,pid32 pid_vidas_puntaje) {
 	player.playerX = 120;
 	player.playerY = 136;
 	//fast enemy "boss" setup
-	struct FastEnemy fast;
+	/*struct FastEnemy fast;
 	fast.fastX = 0;
-	fast.fastY = 30;
+	fast.fastY = 30;*/
 
 	// REG_DISPCNT = MODE3 | BG2_ENABLE;
 	//initalize title screen
 	print_text_on_vga(10, 20, "GALAGA ");
-	drawImage3(0, 0, 480, 320, titlescreen);
+	drawImage3(0, 0, 240, 160, titlescreen);
 	while(1) {
 		if (KEY_DOWN_NOW(BUTTON_START)) {
 			break;
@@ -135,7 +141,7 @@ int juego(pid32 pid_main,pid32 pid_vidas_puntaje) {
 		//player shots 
 		if (KEY_DOWN_NOW(BUTTON_A)) {
 			if (shoots[curr_shot] == 0) {
-				shoots[curr_shot] = 136*240 + player.playerX+9; /* 24 widht player */
+				shoots[curr_shot] = player.playerY*240 + player.playerX+9; /* 24 widht player */
 				curr_shot++;
 				if (curr_shot >= N_SHOOTS)
 					curr_shot = 0;
@@ -172,10 +178,12 @@ int juego(pid32 pid_main,pid32 pid_vidas_puntaje) {
 			drawImage3(easyEnemies[a].enemyX, easyEnemies[a].enemyY, 20, 20, enemy);
 			if (collision(easyEnemies[a].enemyX, easyEnemies[a].enemyY, 20, 20, player.playerX, player.playerY)) {
 				send(pid_vidas_puntaje,'v');//---------------------
-			}	
+				endGame();
+				easyEnemies[a].enemyY = 0;
+			}
 			if (easyEnemies[a].enemyY >= 160) {
 				easyEnemies[a].enemyY = 0;
-			}		
+			}
 		}
 
 		//draw shots
@@ -189,7 +197,7 @@ int juego(pid32 pid_main,pid32 pid_vidas_puntaje) {
 
 			// check hits of shoots
 			for (int j = 0; j < 9; j++) {
-				if (collision(easyEnemies[j].enemyX, easyEnemies[j].enemyY, 15, 15, shoots[i] % 240, shoots[i] / 240)) {
+				if (collisionShoot(easyEnemies[j].enemyX, easyEnemies[j].enemyY, 20, 20, shoots[i] % 240, shoots[i] / 240)) {
 					if (shoots[i] != 0) {
 						//Avisar al proceso contador que sume un punto
 						send(pid_vidas_puntaje,'p');
@@ -200,15 +208,26 @@ int juego(pid32 pid_main,pid32 pid_vidas_puntaje) {
 					shoots[i] = 0;
 
 				}
+				if (collisionShoot(hardEnemies[j].enemyX, hardEnemies[j].enemyY, 15, 15, shoots[i] % 240, shoots[i] / 240)){
+					if (shoots[i] != 0) {
+						//Avisar al proceso contador que sume un punto
+						send(pid_vidas_puntaje,'p');
+					}
+					drawRect(hardEnemies[j].enemyX, easyEnemies[j].enemyY,  20, 20, BLACK);
+					drawRect((shoots[i] % 240), (shoots[i] / 240)+4, 5, 5, BLACK);
+					hardEnemies[j].enemyY = 0;
+					shoots[i] = 0;
+				}
 			}
 		}
 		
 		//draw hard enemies
 		for (int a = 0; a < 9; a++) {
 			hardEnemies[a].enemyY += enemyspeed;
-			drawImage3(hardEnemies[a].enemyX, hardEnemies[a].enemyY, 20, 20, enemy);
-			if (collision(hardEnemies[a].enemyX, hardEnemies[a].enemyY, 20, 20, player.playerX, player.playerY)) {
+			drawImage3(hardEnemies[a].enemyX, hardEnemies[a].enemyY, 15, 15, boss);
+			if (collision(hardEnemies[a].enemyX, hardEnemies[a].enemyY, 15, 15, player.playerX, player.playerY)) {
 				send(pid_vidas_puntaje,'v');
+				endGame();
 			}	
 			if (hardEnemies[a].enemyY >= 228) {
 				hardEnemies[a].enemyY = 0;
@@ -223,14 +242,14 @@ int juego(pid32 pid_main,pid32 pid_vidas_puntaje) {
 			if ((easyEnemies[a].enemyY >= 120) && (hardEnemies[a].enemyY >=170)) {
 				hardEnemies[a].enemyY = 160;
 			}							
-		}	
+		}
 		//draw fast enemy
-		drawImage3(fast.fastX, fast.fastY, 15, 15, boss);
+		/*drawImage3(fast.fastX, fast.fastY, 15, 15, boss);
 		drawHollowRect(fast.fastX - 1, fast.fastY - 1, 17, 17, BLACK);
 		drawHollowRect(fast.fastX - 2, fast.fastY - 2, 19, 19, BLACK);
 		if(collision(fast.fastX, fast.fastY, 15, 15, player.playerX, player.playerY)) {
 			send(pid_vidas_puntaje,'v');
-		}		
+		}
 //RAFA		fast.fastX += fastXSpeed;
 //RAFA		fast.fastY += fastYSpeed;
 		if (fast.fastX >= 240) {
@@ -238,12 +257,44 @@ int juego(pid32 pid_main,pid32 pid_vidas_puntaje) {
 		}
 		if (fast.fastY >= 200) {
 			fast.fastY = player.playerY - 20;
-		}
+		}*/
 	}	
 	return 0;
 }
 
-
+int collisionShoot(u16 enemyX, u16 enemyY, u16 enemyWidth, u16 enemyHeight, u16 playerX, u16 playerY) {
+	//check if bottom right corner of enemy is within player
+	if (((enemyX + enemyWidth) > playerX) && ( (enemyY + enemyHeight)
+		> playerY ) &&  ((enemyX + enemyWidth) < (playerX + 10))
+		&& ((enemyY + enemyWidth) < (playerY + 10))) {
+		return 1;
+	}
+	//check bottom left corner of enemy
+	if ( (enemyX < (playerX + 10))
+		&& (enemyX > playerX)
+		&& ((enemyY + enemyHeight) > playerY)
+		&& ((enemyY + enemyHeight) < (playerY + 10))
+		) {
+		return 1;
+	}
+	//check top left corner
+	if ( (enemyX < (playerX + 10))
+		&& (enemyX > playerX)
+		&& (enemyY > playerY)
+		&& (enemyY < (playerY + 10))
+		) {
+		return 1;
+	}
+	//check top right corner
+	if ( ((enemyX + enemyWidth) < (playerX + 10))
+		&& ((enemyX + enemyWidth) > playerX)
+		&& (enemyY > playerY)
+		&& (enemyY < (playerY + 10))
+		) {
+		return 1;
+	}
+	return 0;
+}
 int collision(u16 enemyX, u16 enemyY, u16 enemyWidth, u16 enemyHeight, u16 playerX, u16 playerY) {
 	//check if bottom right corner of enemy is within player
 	if (((enemyX + enemyWidth) > playerX) && ( (enemyY + enemyHeight) 
@@ -293,23 +344,22 @@ void endGame() {
 }
 int puntaje_vidas(void){
 	short int puntaje=0;
-	short int cantVidas=2;
+	short int cantVidas=1;
 	char buffer[50];
+	umsg32 msg;
 	sprintf(buffer,"Puntaje: %d, Vidas: %d",puntaje,cantVidas);
 	print_text_on_vga(250, 100, buffer);
-	umsg32 msg;
 	while(1){
 		msg=recvclr();
 		msg=receive();
 		switch(msg){
 			case 'p':
+				//sumar puntaje
 				puntaje++;
 				break;
 			case 'v':
+				//Restar vidas
 				cantVidas--;
-				if(cantVidas==0){
-					endGame();
-				}
 				break;
 		}
 		sprintf(buffer,"Puntaje: %d, Vidas: %d",puntaje,cantVidas);
