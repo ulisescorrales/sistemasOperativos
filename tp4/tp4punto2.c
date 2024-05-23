@@ -30,8 +30,7 @@ typedef struct {
 	unsigned int colorsImportant;
 } BMPInfoHeader;
 #pragma pack(pop)
-
-unsigned char nueva_imagen [2000*2000*3];
+//unsigned char nueva_imagen[2000*2000*3];
 void convertir( BMPHeader h, BMPInfoHeader infoh,int comienzoFila,int finFila){
     int width = infoh.width;
 	int height = infoh.height;
@@ -40,9 +39,14 @@ void convertir( BMPHeader h, BMPInfoHeader infoh,int comienzoFila,int finFila){
 	unsigned char pixel[3];
 
 	//Abrir archivo original y en gris(en construcción)
+	//el offset está después de los metadatos en ambos casos
 	int or=abrirArchivoOr();
     int tmpGray=abrirArchivoTmp();
-	lseek(or,3*width*comienzoFila+padding*comienzoFila,SEEK_CUR);
+    //Posicionarse en la sección del arreglo
+    
+    int inicio_imagen_modificar=3*width*comienzoFila+comienzoFila*padding;
+	lseek(or,inicio_imagen_modificar,SEEK_CUR);
+	unsigned char nueva_imagen[(finFila-comienzoFila-1)*(width*3+padding) + (width-1)*3+2];
     for(int i=comienzoFila;i<finFila;i++){
         for(int j=0;j<width;j++){
             read(or,pixel, 3);
@@ -54,11 +58,13 @@ void convertir( BMPHeader h, BMPInfoHeader infoh,int comienzoFila,int finFila){
         //REACOMODAR EL PUNTERO HACIA DONDE CORRESPONDE
    		lseek(or, padding, SEEK_CUR); // Skipping padding
     }
-	int res;
-    res= write(tmpGray, &h, sizeof(BMPHeader));
-    res=write(tmpGray, &infoh, sizeof(BMPInfoHeader));
-    res=write(tmpGray, &nueva_imagen[0], infoh.width * infoh.height * 3);
-
+    //54 ocupan los metadatos
+    lseek(tmpGray,inicio_imagen_modificar+54,SEEK_SET);
+    //infoh.width * infoh.height * 3 representa todo el arreglo pero solo me interesa lo que modifico
+    int paddingTotal=padding*(finFila-comienzoFila);
+    write(tmpGray, &nueva_imagen[0], width * (finFila-comienzoFila) * 3);
+    
+    
     close(tmpGray);
     close(or);
 }
@@ -92,8 +98,8 @@ int abrirArchivoOr(){
 	return in_fd;
 }
 int abrirArchivoTmp(){
-    int tmp = open(GRAYSCALE_FILE, O_RDWR|O_CREAT, 0644);
-    
+    int tmp = open(GRAYSCALE_FILE, O_WRONLY, 0644);
+    //Leer los metadatos para asegurarse de que el archivo sea el correcto
 	if (tmp < 0) {
 		something_wrong(tmp, "Error open");
 	}
@@ -111,26 +117,13 @@ int abrirArchivoTmp(){
 	if (infoh.bpp != 24 || infoh.compression != 0) {
 		something_wrong(tmp, "No 24-bit BMP");
 	}
-    //cargar píxeles en el arreglo    
-    unsigned char pixel[3];
-    int width=infoh.width;
-    int height=infoh.height;
-  	int padding = (4 - (width * 3) % 4) % 4; // Calculating padding size
-	for(int i=0;i<height;i++){
-        for(int j=0;j<width;j++){
-            read(tmp, pixel, 3);
-	        nueva_imagen[i*(width*3+padding) + j*3]= pixel[0];
-	        nueva_imagen[i*(width*3+padding) + j*3 + 1] = pixel[1];
-	        nueva_imagen[i*(width*3+padding) + j*3 + 2] = pixel[2];
-        }
-        lseek(tmp, padding, SEEK_CUR); // Skipping padding
-    }
-    lseek(tmp,0,SEEK_SET);
-    	
+    //Colocar el offset después de los metadatos
+    //int offset=sizeof(BMPHeader)+sizeof(BMPInfoHeader);
+    //lseek(tmp,offset,SEEK_SET);    
 	return tmp;
 }
 int main()
-{	
+{
     int in_fd = open(BMP_FILE, O_RDONLY);
 	if (in_fd < 0) {
 		something_wrong(in_fd, "Error open");
@@ -149,7 +142,7 @@ int main()
 	if (infoh.bpp != 24 || infoh.compression != 0) {
 		something_wrong(in_fd, "No 24-bit BMP");
 	}
-    //Guardar una primera imagen temporal
+    //Copiar el archivo en el archivo final
 
 	int out_fd = open(GRAYSCALE_FILE, O_WRONLY | O_CREAT|O_TRUNC , 0644);
 	if (out_fd < 0) {
@@ -160,45 +153,44 @@ int main()
 	int height=infoh.height;
 	int width=infoh.width;
 	int padding = (4 - (width * 3) % 4) % 4; // Calculating padding size
+	unsigned char nueva_imagen[(height-1)*(width*3+padding) + (width-1)*3+2];
 	for(int i=0;i<height;i++){
         for(int j=0;j<width;j++){
             read(in_fd, pixel, 3);
 	        nueva_imagen[i*(width*3+padding) + j*3]= pixel[0];
 	        nueva_imagen[i*(width*3+padding) + j*3 + 1] = pixel[1];
-	        nueva_imagen[i*(width*3+padding) + j*3 + 2] = pixel[2];
+	        nueva_imagen[i*(width*3+padding) + j*3 + 2] = pixel[2];	        
         }
         lseek(in_fd, padding, SEEK_CUR); // Skipping padding
     }
-
+    //3393092
+    //printf("%d\n",(height-1)*(width*3+padding) + (width-1)*3+2);
+    //Escribe los metadatos
 	write(out_fd, &h, sizeof(BMPHeader));
     write(out_fd, &infoh, sizeof(BMPInfoHeader));
+    //Escribe la imagen
     write(out_fd, &nueva_imagen[0], infoh.width * infoh.height * 3);
     close(out_fd);
 	close(in_fd);
-	convertir(h, infoh,0,354);
-	convertir(h, infoh,354,708);
-    //Separar convertir en 3 procesos
-  	/*int a=fork();
-  	if(a==0){
-  	    convertir(h, infoh,0,354);
-  	    exit(0);
-  	}else{
- 	    wait(a);
-  	    int b=fork();
-  	    if(b==0){
-      	    convertir(h, infoh,354,708);
-      	    exit(0);
-  	    }else{
-  	        wait(b);
-  	        int c=fork();
-  	        if(c==0){
-  	            convertir(h, infoh,708,1063);
-          	    exit(0);
-  	        }else{
-  	            wait(c);
+	//printf("%d\n",sizeof(BMPHeader)+sizeof(BMPInfoHeader));
+	int proceso_1=fork();
+	if(proceso_1==0){
+    	convertir(h, infoh,0,354);
+	}else{
+	    int proceso_2=fork();
+	    if(proceso_2==0){
+	    	convertir(h, infoh,354,708);
+	    }else{
+	        int proceso_3=fork();
+	        if(proceso_3==0){
+    	        convertir(h, infoh,708,1063);
+	        }else{
+	            wait(proceso_1);
+   	            wait(proceso_2);
+   	            wait(proceso_3);
                 printf("Imagen en gris generada. %s\n", GRAYSCALE_FILE);
-  	        }
-  	    }
-  	}*/
+	        }
+	    }
+	}
 }
 
