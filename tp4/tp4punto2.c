@@ -47,7 +47,7 @@ void convertir( BMPHeader h, BMPInfoHeader infoh,int comienzoFila,int finFila){
     int inicio_imagen_modificar=3*width*comienzoFila+comienzoFila*padding;
 	lseek(or,inicio_imagen_modificar,SEEK_CUR);
 	unsigned char nueva_imagen[(finFila-comienzoFila-1)*(width*3+padding) + (width-1)*3+2];
-    for(int i=comienzoFila;i<finFila;i++){
+    for(int i=0;i<finFila-comienzoFila;i++){
         for(int j=0;j<width;j++){
             read(or,pixel, 3);
 	        gray = (unsigned char)(0.3 * pixel[2] + 0.59 * pixel[1] + 0.11 * pixel[0]);
