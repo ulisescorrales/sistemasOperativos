@@ -42,8 +42,9 @@ void convertir( BMPHeader h, BMPInfoHeader infoh,int comienzoFila,int finFila){
 	//el offset está después de los metadatos en ambos casos
 	int or=abrirArchivoOr();
     int tmpGray=abrirArchivoTmp();
-    //Posicionarse en la sección del arreglo
-    
+
+
+    //Estando en los metadatos, posicionarse en la sección del arreglo
     int inicio_imagen_modificar=3*width*comienzoFila+comienzoFila*padding;
 	lseek(or,inicio_imagen_modificar,SEEK_CUR);
 	unsigned char nueva_imagen[(finFila-comienzoFila-1)*(width*3+padding) + (width-1)*3+2];
@@ -59,10 +60,11 @@ void convertir( BMPHeader h, BMPInfoHeader infoh,int comienzoFila,int finFila){
    		lseek(or, padding, SEEK_CUR); // Skipping padding
     }
     //54 ocupan los metadatos
-    lseek(tmpGray,inicio_imagen_modificar+54,SEEK_SET);
+    int metadatos=sizeof(BMPHeader)+sizeof(BMPInfoHeader);
+    lseek(tmpGray,metadatos+inicio_imagen_modificar,SEEK_SET);
     //infoh.width * infoh.height * 3 representa todo el arreglo pero solo me interesa lo que modifico
     int paddingTotal=padding*(finFila-comienzoFila);
-    write(tmpGray, &nueva_imagen[0], width * (finFila-comienzoFila) * 3);
+    write(tmpGray, &nueva_imagen[0], width * (finFila-comienzoFila+1) * 3);
     
     
     close(tmpGray);
