@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#define BMP_FILE "input.bmp"
+#define BMP_FILE "input2.bmp"
 #define GRAYSCALE_FILE "output_grayscale.bmp"
 
 #pragma pack(push, 1)
@@ -45,11 +45,10 @@ void convertir( BMPHeader h, BMPInfoHeader infoh,int comienzoFila,int finFila){
 
 
     //Estando en los metadatos, posicionarse en la sección del arreglo
-    int inicio_imagen_modificar=3*width*comienzoFila+(comienzoFila*padding);
+    int inicio_imagen_modificar=3*width*comienzoFila+(comienzoFila*(padding));
 	lseek(or,inicio_imagen_modificar,SEEK_CUR);
-	//unsigned char nueva_imagen[2100*2000];
-	//unsigned char nueva_imagen[(finFila-comienzoFila-1)*(width*3+padding) + (width-1)*3+2];
-    for(int i=0;i<=finFila-comienzoFila;i++){
+	int a=0;
+    for(int i=0;i<finFila-comienzoFila;i++){
         for(int j=0;j<width;j++){
             read(or,pixel, 3);
 	        gray = (unsigned char)(0.3 * pixel[2] + 0.59 * pixel[1] + 0.11 * pixel[0]);
@@ -57,15 +56,13 @@ void convertir( BMPHeader h, BMPInfoHeader infoh,int comienzoFila,int finFila){
 	        nueva_imagen[i*(width*3+padding) + j*3 + 1] = gray;
 	        nueva_imagen[i*(width*3+padding) + j*3 + 2] = gray;
         }
-        //REACOMODAR EL PUNTERO HACIA DONDE CORRESPONDE
    		lseek(or, padding, SEEK_CUR); // Skipping padding
     }
-    //54 ocupan los metadatos
+    //54 bytes ocupan los metadatos
     int metadatos=sizeof(BMPHeader)+sizeof(BMPInfoHeader);
-	printf("%d\n",inicio_imagen_modificar);
-    lseek(tmpGray,metadatos+inicio_imagen_modificar,SEEK_SET);
-    //infoh.width * infoh.height * 3 representa todo el arreglo pero solo me interesa lo que modifico
-    write(tmpGray, &nueva_imagen[0], width * (finFila-comienzoFila+1) * 3);
+    lseek(tmpGray,inicio_imagen_modificar,SEEK_CUR);
+
+    write(tmpGray, &nueva_imagen[0], width * (finFila-comienzoFila) * 3+(finFila-comienzoFila)*padding);
 
     close(tmpGray);
     close(or);

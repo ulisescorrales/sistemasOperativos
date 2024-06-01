@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#define BMP_FILE "input.bmp"
+#define BMP_FILE "input2.bmp"
 #define GRAYSCALE_FILE "output_grayscale.bmp"
 
 #pragma pack(push, 1)
