@@ -1,5 +1,3 @@
-extern shellcmd galaga(int32, char *[]);
-
 extern shellcmd gestor_bisiestos(int32, char *[]);
 
 extern shellcmd killSleep (int32, char *[]);

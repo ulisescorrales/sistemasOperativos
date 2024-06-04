@@ -33,8 +33,7 @@ const	struct	cmdent	cmdtab[] = {
     {"tp2punto1",FALSE,tp2punto1},
     {"tp2Punto2",FALSE,tp2Punto2},   
     {"killSleep",FALSE,killSleep},
-    {"gestor_bisiestos",FALSE,gestor_bisiestos},
-	{"galaga",FALSE,	galaga}
+    {"gestor_bisiestos",FALSE,gestor_bisiestos}
     
 };
 
