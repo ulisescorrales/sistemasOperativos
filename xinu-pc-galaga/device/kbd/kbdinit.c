@@ -3,8 +3,13 @@
 #include <xinu.h>
 #include <keyboard.h>
 
-unsigned char kblayout [128];  // { ... } Fill your layout yourself 
-
+//Crear estructura circular
+unsigned char kblayout [128];  // { ... } Fill your layout yourself
+int inicio=0;
+int fin=0
+int tamanio_arreglo=128;
+int cant_entradas=0;
+sid32 sem_kbd(0);
 
 void keyboard_wait(byte a_type) //unsigned char
 {

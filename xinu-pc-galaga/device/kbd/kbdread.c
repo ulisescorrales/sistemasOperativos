@@ -13,5 +13,5 @@ devcall	kbdread (
           uint32        count           /* Length of buffer             */
 	)
 {
-	return OK;
+	return kbdgetc();
 }

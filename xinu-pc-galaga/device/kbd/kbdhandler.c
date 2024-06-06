@@ -5,7 +5,6 @@
 #include <xinu.h>
 #include <keyboard.h>
 
-unsigned char tecla_actual;
 
 unsigned char get_scancode()
 {
@@ -26,8 +25,9 @@ void kbdhandler(void)
 	unsigned int shift_key = 0;
 	int i = 10;
 
+
 	scancode = get_scancode();
-	tecla_actual = scancode;
+
 	sprintf(t, "kbd: 0x%x     ", scancode);
 	print_text_on_vga(10, 300, t);
 
@@ -40,6 +40,17 @@ void kbdhandler(void)
 			int shiftaltctrl = 1;//Put anything to see what special keys were pressed
 		} else {  
 		}     
+	}
+
+	//Si el buffer no está lleno
+	if(cantEntradas!=128){
+		kblayout[inicio]=scancode;
+		cant_entradas++;
+		fin++;
+		if(fin==128){
+			fin=0;
+		}
+		signal(kbd_sem);
 	}
 }
 
