@@ -6,10 +6,10 @@
 //Crear estructura circular
 unsigned char kblayout [128];  // { ... } Fill your layout yourself
 int inicio=0;
-int fin=0
+int fin=0;
 int tamanio_arreglo=128;
 int cant_entradas=0;
-sid32 sem_kbd(0);
+sid32 sem_kbd;
 
 void keyboard_wait(byte a_type) //unsigned char
 {
@@ -52,10 +52,10 @@ devcall	kbdinit (
 
 	int i;
 	for (i=0; i<128; i++)
-		kblayout[i] = i;
+		kblayout[i] = 0;
 	//keyboard_restart();
 
-
+    sem_kbd=semcreate(0);
 	byte _status;  //unsigned char
 
 	//Enable the keyboard device   old: auxiliary mouse device

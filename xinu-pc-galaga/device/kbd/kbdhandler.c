@@ -25,6 +25,11 @@ void kbdhandler(void)
 	unsigned int shift_key = 0;
 	int i = 10;
 
+    extern unsigned char kblayout[];
+    extern int inicio;
+    extern sid32 sem_kbd;
+    extern int fin;
+    extern int cant_entradas;
 
 	scancode = get_scancode();
 
@@ -43,14 +48,14 @@ void kbdhandler(void)
 	}
 
 	//Si el buffer no está lleno
-	if(cantEntradas!=128){
-		kblayout[inicio]=scancode;
+	if(cant_entradas<128){
+		kblayout[fin]=scancode;
 		cant_entradas++;
 		fin++;
 		if(fin==128){
 			fin=0;
 		}
-		signal(kbd_sem);
+		signal(sem_kbd);
 	}
 }
 

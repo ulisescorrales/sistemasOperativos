@@ -7,7 +7,6 @@
 #include "shoot.h"
 #include <xinu.h>
 
-extern unsigned char tecla_actual;
 typedef unsigned short u16;
 #define RGB(r, g, b) (r | (g << 5) | (b << 10))
 // #define REG_DISPCNT *(u16 *)0x4000000
@@ -31,7 +30,7 @@ typedef unsigned short u16;
 #define KEY_DOWN_NOW(key)  (~(BUTTONS) & key)
 */
 //#define BUTTONS *(volatile unsigned int *)0x4000130
-
+unsigned char *tecla_actual;
 #define BUTTON_A	0x24
 #define BUTTON_B	0x25 
 #define BUTTON_EXIT 0x10 //Presionar 'q' para salir
@@ -43,7 +42,7 @@ typedef unsigned short u16;
 #define BUTTON_DOWN 	0x1f //'s'
 #define BUTTON_R	'1'
 #define BUTTON_L	'2'
-#define KEY_DOWN_NOW(key)  (tecla_actual == key)
+#define KEY_DOWN_NOW(key)  ((*tecla_actual) == key)
 
 //variable definitions
 #define playerspeed 2
@@ -90,8 +89,9 @@ int curr_shot = 0;
 		enemies[a].enemyY = 0;
 	}
 }*/
-int juego(pid32 pid_main,pid32 pid_vidas_puntaje) {
+int juego(pid32 pid_main,pid32 pid_vidas_puntaje, unsigned char *tecla) {
 	//easy enemy wave set setup
+	tecla_actual=(*tecla);
 	struct Enemy easyEnemies[9];
 	for (int a = 0; a < 9; a++) {
 		easyEnemies[a].enemyX = (28*a);
@@ -372,18 +372,31 @@ void temporizador(){
 
 	}
 }
+void teclado_in(unsigned char *tecla){
+    while(1){
+        read(KEYBOARD,&tecla,1);
+        printf("Tecla ingresada: %c\n",(*tecla));
+    }
+}
 
 int galaga(){
-	//Este sería el control
-	pid32 vidas_puntaje_pid=create(puntaje_vidas,8000,20,"Vidas y puntaje",0);
-	pid32 juego_pid=create(juego,8000,20,"Galaga juego",2,getpid(),vidas_puntaje_pid);
-	resume(juego_pid);
-	resume(vidas_puntaje_pid);
+    unsigned char tecla_actual;
+	//Si se puede abrir el teclado, ejecutar el programa
+	if(open(KEYBOARD,"param sin uso","param sin uso")!=-1){
+    	pid32 vidas_puntaje_pid=create(puntaje_vidas,8000,20,"Vidas y puntaje",0);
+    	pid32 juego_pid=create(juego,8000,20,"Galaga juego",3,getpid(),vidas_puntaje_pid,&tecla_actual);
+    	pid32 teclado_pid=create(teclado_in,8000,20,"Teclado",1,&tecla_actual);
+	    resume(teclado_pid);
+	    resume(juego_pid);
+	    resume(vidas_puntaje_pid);
 
-	umsg32 msg=recvclr();
-	msg=receive();
-	kill(vidas_puntaje_pid);
-	kill(juego_pid);
-	printf("FIN DEL JUEGO %d\n",msg);
-	exit();
+        //terminar el juego
+	    umsg32 msg=recvclr();
+	    msg=receive();
+	    kill(vidas_puntaje_pid);
+	    kill(juego_pid);
+	    close(KEYBOARD);
+	    kill(teclado_pid);
+	    printf("FIN DEL JUEGO %d\n",msg);
+	}
 }

@@ -25,11 +25,15 @@ void kbdhandler(void)
 	unsigned char scancode; 
 	unsigned int shift_key = 0;
 	int i = 10;
+	extern unsigned char kblayout[];
 
 	scancode = get_scancode();
 	sprintf(t, "kbd: 0x%x     ", scancode);
 	print_text_on_vga(10, 300, t);
-
+	
+	print_text_on_vga(10, 500, kblayout);
+    //
+    
 	if(scancode == 0x2A) {
 		shift_key = 1;//Shift key is pressed
 	} else if(scancode & 0xAA) {
