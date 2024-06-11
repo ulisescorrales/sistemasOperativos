@@ -29,11 +29,13 @@ void kbdhandler(void)
     extern sid32 sem_kbd;
     extern int fin;
     extern int cant_entradas;
+    extern int tamanio_buffer_kbd;
 
 	scancode = get_scancode();
 
-	sprintf(t, "kbd: 0x%x     ", scancode);
-	print_text_on_vga(10, 300, t);
+    //imprimir en vga scancode
+	//sprintf(t, "kbd: 0x%x     ", scancode);
+	//print_text_on_vga(10, 300, t);
 
 	if(scancode == 0x2A) {
 		shift_key = 1;//Shift key is pressed
@@ -47,16 +49,15 @@ void kbdhandler(void)
 	}
 
 	//Si el buffer no está lleno
-	if(cant_entradas<128){	
+	if(cant_entradas<tamanio_buffer_kbd){	
 		kblayout[fin]=scancode;
 		//printf("kablayout[%d]: %x\n",fin,kblayout[fin]);
 		cant_entradas++;
 		fin++;
-		if(fin==128){
+		if(fin==tamanio_buffer_kbd){
 			fin=0;
 		}
 		signal(sem_kbd);
 	}
-	print_text_on_vga(10, 500, kblayout);
 }
 

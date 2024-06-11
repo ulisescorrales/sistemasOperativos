@@ -216,7 +216,7 @@ int juego(pid32 pid_main,pid32 pid_vidas_puntaje, unsigned char *tecla) {
 						//Avisar al proceso contador que sume un punto
 						send(pid_vidas_puntaje,'p');
 					}
-					drawRect(hardEnemies[j].enemyX, easyEnemies[j].enemyY,  20, 20, BLACK);
+					drawRect(hardEnemies[j].enemyX, hardEnemies[j].enemyY,  20, 20, BLACK);
 					drawRect((shoots[i] % 240), (shoots[i] / 240)+4, 5, 5, BLACK);
 					hardEnemies[j].enemyY = 0;
 					shoots[i] = 0;
@@ -250,15 +250,16 @@ int juego(pid32 pid_main,pid32 pid_vidas_puntaje, unsigned char *tecla) {
 		/*drawImage3(fast.fastX, fast.fastY, 15, 15, boss);
 		drawHollowRect(fast.fastX - 1, fast.fastY - 1, 17, 17, BLACK);
 		drawHollowRect(fast.fastX - 2, fast.fastY - 2, 19, 19, BLACK);
+		
 		if(collision(fast.fastX, fast.fastY, 15, 15, player.playerX, player.playerY)) {
 			send(pid_vidas_puntaje,'v');
 		}
-//RAFA		fast.fastX += fastXSpeed;
-//RAFA		fast.fastY += fastYSpeed;
+		fast.fastX += fastXSpeed;
+		fast.fastY += fastYSpeed;
 		if (fast.fastX >= 240) {
 			fast.fastX = 0;
 		}
-		if (fast.fastY >= 200) {
+		if (fast.fastY >= 200){
 			fast.fastY = player.playerY - 20;
 		}*/
 	}	
@@ -376,29 +377,28 @@ void temporizador(){
 	}
 }
 void teclado_in(unsigned char *tecla){
-    while(1){
-        read(KEYBOARD,tecla,1);
-    }
+	if(open(KEYBOARD,"","")!=-1){
+	    while(1){
+            read(KEYBOARD,tecla,1);
+        }
+	}
 }
 
 int galaga(){
     unsigned char tecla_actual;
-	//Si se puede abrir el teclado, ejecutar el programa
-	if(open(KEYBOARD,"param sin uso","param sin uso")!=-1){
-    	pid32 vidas_puntaje_pid=create(puntaje_vidas,8000,20,"Vidas y puntaje",0);
-    	pid32 juego_pid=create(juego,8000,20,"Galaga juego",3,getpid(),vidas_puntaje_pid,&tecla_actual);
-    	pid32 teclado_pid=create(teclado_in,8000,20,"Teclado",1,&tecla_actual);
-	    resume(teclado_pid);
-	    resume(juego_pid);
-	    resume(vidas_puntaje_pid);
+	pid32 vidas_puntaje_pid=create(puntaje_vidas,8000,20,"Vidas y puntaje",0);
+	pid32 juego_pid=create(juego,8000,20,"Galaga juego",3,getpid(),vidas_puntaje_pid,&tecla_actual);
+	pid32 teclado_pid=create(teclado_in,8000,20,"Teclado",1,&tecla_actual);
+    resume(teclado_pid);
+    resume(juego_pid);
+    resume(vidas_puntaje_pid);
 
-        //terminar el juego
-	    umsg32 msg=recvclr();
-	    msg=receive();
-	    kill(vidas_puntaje_pid);
-	    kill(juego_pid);
-	    close(KEYBOARD);
-	    kill(teclado_pid);
-	    printf("FIN DEL JUEGO %d\n",msg);
-	}
+    //terminar el juego
+    umsg32 msg=recvclr();
+    msg=receive();
+    kill(vidas_puntaje_pid);
+    kill(juego_pid);
+    close(KEYBOARD);
+    kill(teclado_pid);
+    printf("FIN DEL JUEGO %d\n",msg);	
 }

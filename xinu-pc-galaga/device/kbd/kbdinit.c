@@ -4,10 +4,10 @@
 #include <keyboard.h>
 
 //Crear estructura circular
-unsigned char kblayout [128];  // { ... } Fill your layout yourself
 int inicio=0;
 int fin=0;
-int tamanio_arreglo=128;
+int tamanio_buffer_kbd=10;
+unsigned char kblayout [10];  // { ... } Fill your layout yourself
 int cant_entradas=0;
 sid32 sem_kbd;
 
