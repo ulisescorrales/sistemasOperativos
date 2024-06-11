@@ -18,7 +18,7 @@ devcall	kbdread (
     extern short int kb_en_uso;
     if(kb_en_uso){
         (*buffer)=kbdgetc();
-//        printf("ingresaste una letra: %c \n",(*buffer));
+        //printf("ingresaste una letra: %x \n",(*buffer));
     }else{
         exito=-1;
     }

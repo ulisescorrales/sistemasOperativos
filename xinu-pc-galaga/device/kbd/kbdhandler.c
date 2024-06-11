@@ -26,7 +26,6 @@ void kbdhandler(void)
 	int i = 10;
 
     extern unsigned char kblayout[];
-    extern int inicio;
     extern sid32 sem_kbd;
     extern int fin;
     extern int cant_entradas;
@@ -48,8 +47,9 @@ void kbdhandler(void)
 	}
 
 	//Si el buffer no está lleno
-	if(cant_entradas<128){
+	if(cant_entradas<128){	
 		kblayout[fin]=scancode;
+		printf("kablayout[%d]: %x\n",fin,kblayout[fin]);
 		cant_entradas++;
 		fin++;
 		if(fin==128){
@@ -57,5 +57,6 @@ void kbdhandler(void)
 		}
 		signal(sem_kbd);
 	}
+	print_text_on_vga(10, 500, kblayout);
 }
 
