@@ -49,7 +49,7 @@ void kbdhandler(void)
 	//Si el buffer no está lleno
 	if(cant_entradas<128){	
 		kblayout[fin]=scancode;
-		printf("kablayout[%d]: %x\n",fin,kblayout[fin]);
+		//printf("kablayout[%d]: %x\n",fin,kblayout[fin]);
 		cant_entradas++;
 		fin++;
 		if(fin==128){

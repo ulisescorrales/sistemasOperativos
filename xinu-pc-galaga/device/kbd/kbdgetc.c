@@ -9,7 +9,7 @@ unsigned char kbdgetc(){
 
     wait(sem_kbd);
     letra=kblayout[inicio];
-    printf("Letra tomada kblayout[%d]: %x\n",inicio,letra);
+    //printf("Letra tomada kblayout[%d]: %x\n",inicio,letra);
     kblayout[inicio]=0;
     inicio++;
     if(inicio==128){

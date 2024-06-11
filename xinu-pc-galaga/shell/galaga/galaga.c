@@ -30,7 +30,7 @@ typedef unsigned short u16;
 #define KEY_DOWN_NOW(key)  (~(BUTTONS) & key)
 */
 //#define BUTTONS *(volatile unsigned int *)0x4000130
-unsigned char tecla_actual;
+unsigned char *tecla_actual;
 #define BUTTON_A	0x24
 #define BUTTON_B	0x25 
 #define BUTTON_EXIT 0x10 //Presionar 'q' para salir
@@ -42,7 +42,7 @@ unsigned char tecla_actual;
 #define BUTTON_DOWN 	0x1f //'s'
 #define BUTTON_R	'1'
 #define BUTTON_L	'2'
-#define KEY_DOWN_NOW(key)  (tecla_actual == key)
+#define KEY_DOWN_NOW(key)  ((*tecla_actual) == key)
 
 //variable definitions
 #define playerspeed 2
@@ -89,9 +89,11 @@ int curr_shot = 0;
 		enemies[a].enemyY = 0;
 	}
 }*/
+
 int juego(pid32 pid_main,pid32 pid_vidas_puntaje, unsigned char *tecla) {
 	//easy enemy wave set setup
 	struct Enemy easyEnemies[9];
+	tecla_actual=tecla;
 	for (int a = 0; a < 9; a++) {
 		easyEnemies[a].enemyX = (28*a);
 		easyEnemies[a].enemyY = 0;
@@ -104,7 +106,7 @@ int juego(pid32 pid_main,pid32 pid_vidas_puntaje, unsigned char *tecla) {
 	for (int a = 0; a < 9; a++) {
 		hardEnemies[a].enemyX = (28*a);
 		hardEnemies[a].enemyY = 160;
-	} 
+	}
 	hardEnemies[3].enemyX = 240;
 	hardEnemies[6].enemyX = 240;
 	//player setup
@@ -121,19 +123,19 @@ int juego(pid32 pid_main,pid32 pid_vidas_puntaje, unsigned char *tecla) {
 	print_text_on_vga(10, 20, "GALAGA ");
 	drawImage3(0, 0, 240, 160, titlescreen);
 	while(1) {
-		tecla_actual=(*tecla);
+		//tecla_actual=(*tecla);
 		if (KEY_DOWN_NOW(BUTTON_START)) {
 			break;
 		}
-	}	
+	}
 	//start black screen for drawing
 	for (int i = 0; i < 240; i++) {
 		for (int j = 0; j < 160; j++) {
 			setPixel(i, j, BLACK);
 		}
-	}	
+	}
 	while(1) {
-    	tecla_actual=(*tecla);
+    	//tecla_actual=(*tecla);
 		//go back to title screen if select button is pressed
 		if (KEY_DOWN_NOW(BUTTON_SELECT)) {
 			//initialize();
@@ -375,8 +377,7 @@ void temporizador(){
 }
 void teclado_in(unsigned char *tecla){
     while(1){
-        read(KEYBOARD,&tecla,1);
-        printf("Tecla ingresada: %x\n",(*tecla));
+        read(KEYBOARD,tecla,1);
     }
 }
 
