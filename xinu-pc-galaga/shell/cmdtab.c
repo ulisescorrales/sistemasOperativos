@@ -29,7 +29,8 @@ const	struct	cmdent	cmdtab[] = {
 	{"uptime",	FALSE,	xsh_uptime},
 	{"galaga",	FALSE,	galaga},
 //	{"arkanoid",	FALSE,	arkanoid},
-	{"?",		FALSE,	xsh_help}
+	{"?",		FALSE,	xsh_help},
+	{"teclado",		FALSE,	teclado}
 
 };
 
